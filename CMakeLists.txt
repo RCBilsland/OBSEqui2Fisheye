@@ -1,0 +1,67 @@
+cmake_minimum_required(VERSION 3.20)
+
+project(obs-equi2fisheye VERSION 0.1.0)
+
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+# Try to find libobs via pkg-config first
+find_package(PkgConfig)
+set(HAVE_PKGCFG FALSE)
+if(PkgConfig_FOUND)
+	pkg_check_modules(LIBOBS libobs)
+	if(LIBOBS_FOUND)
+		set(HAVE_PKGCFG TRUE)
+	endif()
+endif()
+
+include(GNUInstallDirs)
+
+set(PLUGIN_NAME obs-equi2fisheye)
+
+add_library(${PLUGIN_NAME} MODULE
+	src/obs-equi2fisheye.c
+)
+
+if(HAVE_PKGCFG)
+	target_include_directories(${PLUGIN_NAME}
+		PRIVATE
+		${LIBOBS_INCLUDE_DIRS}
+	)
+	link_directories(${LIBOBS_LIBRARY_DIRS})
+	target_link_libraries(${PLUGIN_NAME}
+		PRIVATE
+		${LIBOBS_LIBRARIES}
+	)
+else()
+	message(STATUS "pkg-config for libobs not found; using OBS_INCLUDE_DIR/OBS_LIB_DIR if provided")
+	if(DEFINED ENV{OBS_INCLUDE_DIR})
+		target_include_directories(${PLUGIN_NAME} PRIVATE $ENV{OBS_INCLUDE_DIR})
+	endif()
+	if(DEFINED ENV{OBS_LIB_DIR})
+		link_directories($ENV{OBS_LIB_DIR})
+	endif()
+	# Link against libobs by name; expect it to be in OBS_LIB_DIR at link time
+	target_link_libraries(${PLUGIN_NAME} PRIVATE obs)
+endif()
+
+if(APPLE)
+	# Allow undefined symbols to be resolved at runtime by OBS on macOS bundles
+	target_link_options(${PLUGIN_NAME} PRIVATE -Wl,-undefined,dynamic_lookup)
+	set_target_properties(${PLUGIN_NAME} PROPERTIES
+		BUNDLE TRUE
+		BUNDLE_EXTENSION plugin
+		OUTPUT_NAME ${PLUGIN_NAME}
+	)
+endif()
+
+# Install plugin binary and data
+set(OBS_PLUGIN_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/obs-plugins")
+set(OBS_DATA_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/obs")
+
+install(TARGETS ${PLUGIN_NAME}
+	BUNDLE DESTINATION ${OBS_PLUGIN_INSTALL_DIR}
+	LIBRARY DESTINATION ${OBS_PLUGIN_INSTALL_DIR}
+)
+
+install(DIRECTORY data/ DESTINATION ${OBS_DATA_INSTALL_DIR}/plugins/${PLUGIN_NAME})

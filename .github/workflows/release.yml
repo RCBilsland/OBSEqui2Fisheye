@@ -1,0 +1,92 @@
+name: build-release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  macos-build:
+    runs-on: macos-13
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Homebrew
+        run: |
+          brew update
+
+      - name: Install dependencies
+        run: |
+          brew install cmake ninja pkg-config
+          # Install OBS for runtime; headers via source fetch below
+          brew install --cask obs
+
+      - name: Fetch OBS headers (matching Homebrew version)
+        run: |
+          OBS_VER=$(brew info --json=v2 obs | /usr/bin/python3 -c 'import sys,json;print(json.load(sys.stdin)["casks"][0]["versions"]["stable"])')
+          echo "OBS_VER=$OBS_VER"
+          curl -L -o obs-src.tar.gz https://github.com/obsproject/obs-studio/archive/refs/tags/$OBS_VER.tar.gz
+          tar xf obs-src.tar.gz
+          OBS_SRC_DIR=$(echo obs-studio-*)
+          echo "OBS_SRC_DIR=$OBS_SRC_DIR" >> $GITHUB_ENV
+
+      - name: Configure
+        run: |
+          mkdir -p build
+          cd build
+          OBS_INCLUDE_DIR=$GITHUB_WORKSPACE/$OBS_SRC_DIR/libobs
+          OBS_LIB_DIR=/Applications/OBS.app/Contents/Frameworks
+          export OBS_INCLUDE_DIR OBS_LIB_DIR
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+
+      - name: Build
+        run: |
+          cmake --build build --config Release
+
+      - name: Package artifact
+        run: |
+          cd build
+          PLUGIN_NAME=obs-equi2fisheye
+          # Locate built plugin bundle
+          BUNDLE=$(ls -1 | grep "${PLUGIN_NAME}\.plugin" || true)
+          if [ -z "$BUNDLE" ]; then
+            # Some CMake/OBS setups place it in bin
+            BUNDLE=$(ls -1 bin | grep "${PLUGIN_NAME}\.plugin" || true)
+            [ -n "$BUNDLE" ] && BUNDLE="bin/$BUNDLE"
+          fi
+          echo "Bundle path: $BUNDLE"
+          mkdir -p package/${PLUGIN_NAME}/bin package/${PLUGIN_NAME}/data
+          if [ -n "$BUNDLE" ]; then
+            cp -R "$BUNDLE" package/${PLUGIN_NAME}/bin/
+          fi
+          cp -R ../data package/${PLUGIN_NAME}/
+          cd package
+          zip -r ../${PLUGIN_NAME}-macos.zip ${PLUGIN_NAME}
+          cd ..
+          echo "ARTIFACT=${PLUGIN_NAME}-macos.zip" >> $GITHUB_ENV
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: obs-equi2fisheye-macos
+          path: build/${{ env.ARTIFACT }}
+
+  release:
+    needs: macos-build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: obs-equi2fisheye-macos
+          path: dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
