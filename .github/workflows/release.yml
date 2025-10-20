@@ -20,27 +20,20 @@ jobs:
       - name: Install dependencies
         run: |
           brew install cmake ninja pkg-config
-          # Install OBS for runtime; headers via source fetch below
-          brew install --cask obs
 
-      - name: Fetch OBS headers (matching Homebrew version)
+      - name: Install OBS development files
         run: |
-          # Get OBS version from Homebrew cask
-          OBS_VER=$(brew info --json=v2 obs | /usr/bin/python3 -c 'import sys,json;data=json.load(sys.stdin);print(data["casks"][0]["version"])')
-          echo "OBS_VER=$OBS_VER"
-          # Download OBS source for headers
-          curl -L -o obs-src.tar.gz https://github.com/obsproject/obs-studio/archive/refs/tags/$OBS_VER.tar.gz
-          tar xf obs-src.tar.gz
-          OBS_SRC_DIR=$(echo obs-studio-*)
-          echo "OBS_SRC_DIR=$OBS_SRC_DIR" >> $GITHUB_ENV
+          # Install OBS development files via Homebrew
+          brew install obs
+          # Set environment variables for OBS paths
+          OBS_PREFIX=$(brew --prefix obs)
+          echo "OBS_INCLUDE_DIR=$OBS_PREFIX/include" >> $GITHUB_ENV
+          echo "OBS_LIB_DIR=$OBS_PREFIX/lib" >> $GITHUB_ENV
 
       - name: Configure
         run: |
           mkdir -p build
           cd build
-          OBS_INCLUDE_DIR=$GITHUB_WORKSPACE/$OBS_SRC_DIR/libobs
-          OBS_LIB_DIR=/Applications/OBS.app/Contents/Frameworks
-          export OBS_INCLUDE_DIR OBS_LIB_DIR
           cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
 
       - name: Build
