@@ -52,9 +52,22 @@ else()
 	endif()
 	if(DEFINED ENV{OBS_LIB_DIR})
 		link_directories($ENV{OBS_LIB_DIR})
+		# Try to find the OBS library in the app bundle
+		find_library(OBS_LIBRARY
+			NAMES obs libobs
+			PATHS $ENV{OBS_LIB_DIR}
+			NO_DEFAULT_PATH
+		)
+		if(OBS_LIBRARY)
+			target_link_libraries(${PLUGIN_NAME} PRIVATE ${OBS_LIBRARY})
+		else()
+			# Fallback: try to link against obs by name
+			target_link_libraries(${PLUGIN_NAME} PRIVATE obs)
+		endif()
+	else()
+		# Fallback: try to link against obs by name
+		target_link_libraries(${PLUGIN_NAME} PRIVATE obs)
 	endif()
-	# Link against libobs by name; expect it to be in OBS_LIB_DIR at link time
-	target_link_libraries(${PLUGIN_NAME} PRIVATE obs)
 endif()
 
 if(APPLE)
