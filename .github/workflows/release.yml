@@ -169,19 +169,27 @@ jobs:
       - name: Create GitHub Release
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
-          echo "Creating release for tag: $TAG_NAME"
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          UNIQUE_TAG="${TAG_NAME}-${TIMESTAMP}"
+          echo "Creating release for tag: $UNIQUE_TAG"
           
-          # Delete existing release if it exists
-          if gh release view "$TAG_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "Deleting existing release for tag $TAG_NAME"
-            gh release delete "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --yes
-          fi
-          
-          # Create release using GitHub CLI
-          gh release create "$TAG_NAME" \
+          # Create release using GitHub CLI with unique tag
+          gh release create "$UNIQUE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
-            --title "OBS Equi2Fisheye Plugin v$TAG_NAME" \
-            --notes "OBS Studio plugin for converting equirectangular video to fisheye projection with Metal acceleration on macOS." \
+            --title "OBS Equi2Fisheye Plugin v$TAG_NAME (Build $TIMESTAMP)" \
+            --notes "OBS Studio plugin for converting equirectangular video to fisheye projection with Metal acceleration on macOS.
+
+**Installation:**
+1. Download the \`obs-equi2fisheye-macos.zip\` file
+2. Extract the \`obs-equi2fisheye\` folder
+3. Copy \`obs-equi2fisheye.plugin\` to \`/Library/Application Support/obs-studio/plugins/obs-equi2fisheye/bin/\`
+4. Copy the \`data\` folder to \`/Library/Application Support/obs-studio/plugins/obs-equi2fisheye/\`
+5. Restart OBS Studio
+
+**Usage:**
+- Add your equirectangular source (e.g., Media Source)
+- Right-click the source → Filters → Add → \"Equirectangular to Fisheye (Metal)\"
+- Adjust FoV, Pan, Tilt, Yaw, and Outside Alpha as needed." \
             dist/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
