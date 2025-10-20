@@ -22,15 +22,21 @@ jobs:
           brew install cmake ninja pkg-config
           brew install --cask obs
 
-      - name: Download OBS source for headers
+      - name: Download OBS source and SIMDE for headers
         run: |
           # Download OBS source to get headers
           curl -L -o obs-src.tar.gz https://github.com/obsproject/obs-studio/archive/refs/tags/32.0.1.tar.gz
           tar xf obs-src.tar.gz
           OBS_SRC_DIR=$(echo obs-studio-*)
           echo "OBS_SRC_DIR=$OBS_SRC_DIR" >> $GITHUB_ENV
-          # Set include directory to libobs source
+          # Download SIMDE headers
+          curl -L -o simde.tar.gz https://github.com/simd-everywhere/simde/archive/refs/tags/v0.8.2.tar.gz
+          tar xf simde.tar.gz
+          SIMDE_DIR=$(echo simde-*)
+          echo "SIMDE_DIR=$SIMDE_DIR" >> $GITHUB_ENV
+          # Set include directories
           echo "OBS_INCLUDE_DIR=$GITHUB_WORKSPACE/$OBS_SRC_DIR/libobs" >> $GITHUB_ENV
+          echo "SIMDE_INCLUDE_DIR=$GITHUB_WORKSPACE/$SIMDE_DIR" >> $GITHUB_ENV
           # Use OBS app for libraries
           echo "OBS_LIB_DIR=/Applications/OBS.app/Contents/Frameworks" >> $GITHUB_ENV
 

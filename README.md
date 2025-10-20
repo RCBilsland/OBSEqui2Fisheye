@@ -7,7 +7,7 @@ An OBS Studio video filter that converts equirectangular (360x180) images/videos
 - Pan (deg)
 - Tilt (deg)
 - Yaw (deg)
-- Outside Alpha (0..1)
+Perserverance- Outside Alpha (0..1)
 
 ## Build (macOS)
 Prerequisites:
