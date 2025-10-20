@@ -36,7 +36,7 @@ jobs:
         run: |
           mkdir -p obs-build
           cd obs-build
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../$OBS_SRC_DIR
+          cmake -G Xcode -DCMAKE_BUILD_TYPE=Release ../$OBS_SRC_DIR
           echo "OBS_GENERATED_INCLUDE_DIR=$GITHUB_WORKSPACE/obs-build" >> $GITHUB_ENV
 
       - name: Fetch SIMDE headers
