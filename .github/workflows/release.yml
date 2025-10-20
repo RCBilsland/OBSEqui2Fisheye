@@ -177,19 +177,7 @@ jobs:
           gh release create "$UNIQUE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --title "OBS Equi2Fisheye Plugin v$TAG_NAME (Build $TIMESTAMP)" \
-            --notes "OBS Studio plugin for converting equirectangular video to fisheye projection with Metal acceleration on macOS.
-
-**Installation:**
-1. Download the obs-equi2fisheye-macos.zip file
-2. Extract the obs-equi2fisheye folder
-3. Copy obs-equi2fisheye.plugin to /Library/Application Support/obs-studio/plugins/obs-equi2fisheye/bin/
-4. Copy the data folder to /Library/Application Support/obs-studio/plugins/obs-equi2fisheye/
-5. Restart OBS Studio
-
-**Usage:**
-- Add your equirectangular source (e.g., Media Source)
-- Right-click the source → Filters → Add → Equirectangular to Fisheye (Metal)
-- Adjust FoV, Pan, Tilt, Yaw, and Outside Alpha as needed." \
+            --notes "OBS Studio plugin for converting equirectangular video to fisheye projection with Metal acceleration on macOS. See README for installation instructions." \
             dist/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
