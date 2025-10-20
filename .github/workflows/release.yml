@@ -22,11 +22,24 @@ jobs:
           brew install cmake ninja pkg-config
           brew install --cask obs
 
+      - name: Find OBS headers
+        run: |
+          # Find OBS headers in the app bundle
+          find /Applications/OBS.app -name "obs-module.h" -type f | head -1
+          find /Applications/OBS.app -name "*.h" -path "*/libobs/*" | head -5
+          # Set OBS_INCLUDE_DIR to the libobs directory
+          OBS_INCLUDE_DIR=$(find /Applications/OBS.app -name "libobs" -type d | head -1)
+          if [ -z "$OBS_INCLUDE_DIR" ]; then
+            # Fallback: look for any directory containing obs-module.h
+            OBS_INCLUDE_DIR=$(find /Applications/OBS.app -name "obs-module.h" -type f -exec dirname {} \; | head -1)
+          fi
+          echo "Found OBS headers at: $OBS_INCLUDE_DIR"
+          echo "OBS_INCLUDE_DIR=$OBS_INCLUDE_DIR" >> $GITHUB_ENV
+
       - name: Configure
         run: |
           mkdir -p build
           cd build
-          export OBS_INCLUDE_DIR="/Applications/OBS.app/Contents/Frameworks/obs.framework/Headers"
           export OBS_LIB_DIR="/Applications/OBS.app/Contents/Frameworks"
           cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
 
