@@ -32,6 +32,13 @@ jobs:
           OBS_SRC_DIR=$(echo obs-studio-*)
           echo "OBS_SRC_DIR=$OBS_SRC_DIR" >> $GITHUB_ENV
 
+      - name: Configure OBS to generate headers
+        run: |
+          mkdir -p obs-build
+          cd obs-build
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../$OBS_SRC_DIR
+          echo "OBS_GENERATED_INCLUDE_DIR=$GITHUB_WORKSPACE/obs-build" >> $GITHUB_ENV
+
       - name: Fetch SIMDE headers
         run: |
           curl -L -o simde.tar.gz https://github.com/simd-everywhere/simde/archive/refs/tags/v0.8.2.tar.gz
@@ -44,6 +51,7 @@ jobs:
           mkdir -p build
           cd build
           export OBS_INCLUDE_DIR=$GITHUB_WORKSPACE/$OBS_SRC_DIR/libobs
+          export OBS_GENERATED_INCLUDE_DIR=$OBS_GENERATED_INCLUDE_DIR
           export OBS_LIB_DIR=/Applications/OBS.app/Contents/Frameworks
           export SIMDE_INCLUDE_DIR=$SIMDE_INCLUDE_DIR
           cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
