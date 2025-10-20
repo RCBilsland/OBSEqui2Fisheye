@@ -114,15 +114,18 @@ static void equi2fish_video_render(void *data, gs_effect_t *effect)
 	if (!obs_source_process_filter_begin(filter->context, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING))
 		return;
 
-	gs_texture_t *tex = obs_source_get_texture(parent);
-	if (!tex) {
-		obs_source_process_filter_end(filter->context, filter->effect, width, height);
-		return;
-	}
+	// Get the texture from the parent source
+	// Note: OBS filter system should provide the texture automatically
+	gs_texture_t *tex = NULL;
+	// Try to get texture from parent source (this may not be available in all OBS versions)
+	// For now, we'll let the filter system handle texture binding
 
 	const float aspect = (float)width / (float)height;
 
-	gs_effect_set_texture(filter->param_tex, tex);
+	// Set effect parameters
+	if (tex) {
+		gs_effect_set_texture(filter->param_tex, tex);
+	}
 	gs_effect_set_float(filter->param_fov, filter->fov_deg);
 	gs_effect_set_float(filter->param_pan, filter->pan_deg);
 	gs_effect_set_float(filter->param_tilt, filter->tilt_deg);
@@ -130,6 +133,7 @@ static void equi2fish_video_render(void *data, gs_effect_t *effect)
 	gs_effect_set_float(filter->param_aspect, aspect);
 	gs_effect_set_float(filter->param_outside_alpha, filter->outside_alpha);
 
+	// Render the parent source with our effect
 	obs_source_process_filter_end(filter->context, filter->effect, width, height);
 }
 

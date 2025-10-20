@@ -112,6 +112,8 @@ float4 PSMain(VertOut i) : TARGET
 	float3 dir = fisheyeScreenToDir(i.uv, fovr);
 	dir = mul(R, dir);
 	float2 uv = dirToEquirectUV(dir);
+	
+	// Sample the input texture (provided by OBS filter system)
 	float4 c = image.Sample(defaultSampler, uv);
 	c.a = 1.0;
 	return c;
