@@ -166,22 +166,12 @@ jobs:
           name: obs-equi2fisheye-macos
           path: dist
 
-      - name: Delete existing release if it exists
-        run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          echo "Checking for existing release with tag: $TAG_NAME"
-          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
-            echo "Deleting existing release for tag $TAG_NAME"
-            gh release delete "$TAG_NAME" --yes
-          else
-            echo "No existing release found for tag $TAG_NAME"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
