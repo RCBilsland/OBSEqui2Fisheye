@@ -171,6 +171,12 @@ jobs:
           TAG_NAME=${GITHUB_REF#refs/tags/}
           echo "Creating release for tag: $TAG_NAME"
           
+          # Delete existing release if it exists
+          if gh release view "$TAG_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Deleting existing release for tag $TAG_NAME"
+            gh release delete "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --yes
+          fi
+          
           # Create release using GitHub CLI
           gh release create "$TAG_NAME" \
             --repo "$GITHUB_REPOSITORY" \
