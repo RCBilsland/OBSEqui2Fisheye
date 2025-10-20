@@ -19,49 +19,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install cmake ninja pkg-config curl
+          brew install cmake ninja pkg-config
           brew install --cask obs
-
-      - name: Fetch OBS headers (source archive)
-        run: |
-          OBS_VER=$(mdfind kMDItemCFBundleIdentifier = "com.obsproject.obs-studio" | head -n1 | xargs -I{} /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' {}/Contents/Info.plist)
-          if [ -z "$OBS_VER" ]; then OBS_VER=32.0.1; fi
-          echo "OBS_VER=$OBS_VER"
-          curl -L -o obs-src.tar.gz https://github.com/obsproject/obs-studio/archive/refs/tags/$OBS_VER.tar.gz
-          tar xf obs-src.tar.gz
-          OBS_SRC_DIR=$(echo obs-studio-*)
-          echo "OBS_SRC_DIR=$OBS_SRC_DIR" >> $GITHUB_ENV
-
-      - name: Configure OBS to generate headers (skip plugins)
-        run: |
-          mkdir -p obs-build
-          cd obs-build
-          cmake -G Xcode -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_BROWSER=OFF \
-            -DBUILD_VIRTUALCAM=OFF \
-            -DENABLE_AJA=OFF \
-            -DENABLE_BREAKPAD=OFF \
-            -DENABLE_SCRIPTING=OFF \
-            -DENABLE_SPARKLE_UPDATER=OFF \
-            -DUNIX_STRUCTURE=OFF \
-            ../$OBS_SRC_DIR
-          echo "OBS_GENERATED_INCLUDE_DIR=$GITHUB_WORKSPACE/obs-build" >> $GITHUB_ENV
-
-      - name: Fetch SIMDE headers
-        run: |
-          curl -L -o simde.tar.gz https://github.com/simd-everywhere/simde/archive/refs/tags/v0.8.2.tar.gz
-          tar xf simde.tar.gz
-          SIMDE_DIR=$(echo simde-*)
-          echo "SIMDE_INCLUDE_DIR=$GITHUB_WORKSPACE/$SIMDE_DIR" >> $GITHUB_ENV
 
       - name: Configure
         run: |
           mkdir -p build
           cd build
-          export OBS_INCLUDE_DIR=$GITHUB_WORKSPACE/$OBS_SRC_DIR/libobs
-          export OBS_GENERATED_INCLUDE_DIR=$OBS_GENERATED_INCLUDE_DIR
-          export OBS_LIB_DIR=/Applications/OBS.app/Contents/Frameworks
-          export SIMDE_INCLUDE_DIR=$SIMDE_INCLUDE_DIR
+          export OBS_INCLUDE_DIR="/Applications/OBS.app/Contents/Frameworks/obs.framework/Headers"
+          export OBS_LIB_DIR="/Applications/OBS.app/Contents/Frameworks"
           cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
 
       - name: Build
