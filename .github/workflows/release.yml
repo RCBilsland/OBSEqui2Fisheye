@@ -20,24 +20,30 @@ jobs:
       - name: Install dependencies
         run: |
           brew install cmake ninja pkg-config
-          brew install --cask obs
+          # Try to install OBS with development files
+          brew install obs-studio || brew install --cask obs
 
       - name: Find OBS headers
         run: |
-          HEADER=$(find /Applications/OBS.app -name "obs-module.h" -type f | head -1)
-          if [ -z "$HEADER" ]; then
-            echo "obs-module.h not found" >&2
-            exit 1
+          # Try to find OBS headers via pkg-config first
+          if pkg-config --exists libobs; then
+            OBS_INCLUDE_DIR=$(pkg-config --variable=includedir libobs)
+            OBS_LIB_DIR=$(pkg-config --variable=libdir libobs)
+            echo "Found OBS via pkg-config: include=$OBS_INCLUDE_DIR, lib=$OBS_LIB_DIR"
+          else
+            # Fallback: look in Homebrew prefix
+            OBS_PREFIX=$(brew --prefix obs-studio 2>/dev/null || echo "")
+            if [ -n "$OBS_PREFIX" ]; then
+              OBS_INCLUDE_DIR="$OBS_PREFIX/include"
+              OBS_LIB_DIR="$OBS_PREFIX/lib"
+              echo "Found OBS via Homebrew: include=$OBS_INCLUDE_DIR, lib=$OBS_LIB_DIR"
+            else
+              echo "OBS development files not found" >&2
+              exit 1
+            fi
           fi
-          OBS_INCLUDE_DIR=$(dirname "$HEADER")
-          echo "Found obs-module.h at: $HEADER"
           echo "OBS_INCLUDE_DIR=$OBS_INCLUDE_DIR" >> $GITHUB_ENV
-          # Look for a generated config directory (contains obsconfig.h) if present
-          GEN_DIR=$(find /Applications/OBS.app -name "obsconfig.h" -type f -exec dirname {} \; | head -1)
-          if [ -n "$GEN_DIR" ]; then
-            echo "OBS_GENERATED_LIBOBS_INCLUDE_DIR=$GEN_DIR" >> $GITHUB_ENV
-          fi
-          echo "OBS_LIB_DIR=/Applications/OBS.app/Contents/Frameworks" >> $GITHUB_ENV
+          echo "OBS_LIB_DIR=$OBS_LIB_DIR" >> $GITHUB_ENV
 
       - name: Configure
         run: |
