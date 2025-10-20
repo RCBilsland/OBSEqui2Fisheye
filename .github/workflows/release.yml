@@ -173,6 +173,7 @@ jobs:
           
           # Create release using GitHub CLI
           gh release create "$TAG_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
             --title "OBS Equi2Fisheye Plugin v$TAG_NAME" \
             --notes "OBS Studio plugin for converting equirectangular video to fisheye projection with Metal acceleration on macOS." \
             dist/*.zip
