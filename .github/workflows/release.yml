@@ -167,11 +167,14 @@ jobs:
           path: dist
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*.zip
-          generate_release_notes: true
-          draft: false
-          prerelease: false
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "Creating release for tag: $TAG_NAME"
+          
+          # Create release using GitHub CLI
+          gh release create "$TAG_NAME" \
+            --title "OBS Equi2Fisheye Plugin v$TAG_NAME" \
+            --notes "OBS Studio plugin for converting equirectangular video to fisheye projection with Metal acceleration on macOS." \
+            dist/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
