@@ -7,6 +7,7 @@ An OBS Studio video filter that converts equirectangular (360x180) images/videos
 - Pan (deg)
 - Tilt (deg)
 - Yaw (deg)
+- Outside Alpha (0..1)
 
 ## Build (macOS)
 Prerequisites:
@@ -31,7 +32,7 @@ Alternatively, use `cmake --install .` to install into the system-default locati
 ## Usage
 - In OBS, add your equirectangular source (e.g., Media Source).
 - Right-click the source -> Filters -> Add -> "Equirectangular to Fisheye (Metal)".
-- Tweak FoV/Pan/Tilt/Yaw to achieve the desired view.
+- Tweak FoV/Pan/Tilt/Yaw/Outside Alpha to achieve the desired view.
 
 ## Notes
 - The shader uses an equidistant fisheye model. Adjust FoV to control the fisheye aperture.
