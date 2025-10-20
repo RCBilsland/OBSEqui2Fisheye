@@ -45,7 +45,7 @@ jobs:
           # Configure OBS minimally to generate obsconfig.h
           mkdir -p obs-config-build
           cd obs-config-build
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release \
+          cmake -G Xcode -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_BROWSER=OFF \
             -DBUILD_VIRTUALCAM=OFF \
             -DENABLE_AJA=OFF \
