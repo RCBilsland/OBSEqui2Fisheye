@@ -94,30 +94,30 @@ static void equi2fish_defaults(obs_data_t *settings)
 	obs_data_set_default_double(settings, "outside_alpha", 0.0);
 }
 
-static bool equi2fish_video_render(void *data, gs_effect_t *effect)
+static void equi2fish_video_render(void *data, gs_effect_t *effect)
 {
 	UNUSED_PARAMETER(effect);
 	struct equi2fish_filter *filter = data;
 	obs_source_t *target = obs_filter_get_target(filter->context);
 	obs_source_t *parent = obs_filter_get_parent(filter->context);
 	if (!target || !parent)
-		return false;
+		return;
 
 	uint32_t width = obs_source_get_base_width(target);
 	uint32_t height = obs_source_get_base_height(target);
 	if (width == 0 || height == 0)
-		return false;
+		return;
 
 	if (!filter->effect)
-		return false;
+		return;
 
 	if (!obs_source_process_filter_begin(filter->context, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING))
-		return false;
+		return;
 
-	gs_texture_t *tex = obs_source_get_filter_tex(parent);
+	gs_texture_t *tex = obs_source_get_texture(parent);
 	if (!tex) {
 		obs_source_process_filter_end(filter->context, filter->effect, width, height);
-		return false;
+		return;
 	}
 
 	const float aspect = (float)width / (float)height;
@@ -131,7 +131,6 @@ static bool equi2fish_video_render(void *data, gs_effect_t *effect)
 	gs_effect_set_float(filter->param_outside_alpha, filter->outside_alpha);
 
 	obs_source_process_filter_end(filter->context, filter->effect, width, height);
-	return true;
 }
 
 static uint32_t equi2fish_width(void *data)
