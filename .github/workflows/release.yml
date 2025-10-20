@@ -25,8 +25,10 @@ jobs:
 
       - name: Fetch OBS headers (matching Homebrew version)
         run: |
-          OBS_VER=$(brew info --json=v2 obs | /usr/bin/python3 -c 'import sys,json;print(json.load(sys.stdin)["casks"][0]["versions"]["stable"])')
+          # Get OBS version from Homebrew cask
+          OBS_VER=$(brew info --json=v2 obs | /usr/bin/python3 -c 'import sys,json;data=json.load(sys.stdin);print(data["casks"][0]["version"])')
           echo "OBS_VER=$OBS_VER"
+          # Download OBS source for headers
           curl -L -o obs-src.tar.gz https://github.com/obsproject/obs-studio/archive/refs/tags/$OBS_VER.tar.gz
           tar xf obs-src.tar.gz
           OBS_SRC_DIR=$(echo obs-studio-*)
