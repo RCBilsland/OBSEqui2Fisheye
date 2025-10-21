@@ -121,6 +121,8 @@ jobs:
 
       - name: Configure
         run: |
+          # Clean any existing build directory
+          rm -rf build
           mkdir -p build
           cd build
           cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
