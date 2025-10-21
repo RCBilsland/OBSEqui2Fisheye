@@ -1,5 +1,14 @@
 uniform float4x4 ViewProj;
 
+// Parameters in degrees
+uniform float fov_deg = 180.0;
+uniform float pan_deg = 0.0;
+uniform float tilt_deg = 0.0;
+uniform float yaw_deg = 0.0;
+uniform float aspect = 1.0;
+// Outside-of-circle alpha (0..1)
+uniform float outside_alpha = 0.0;
+
 struct VertIn {
 	float4 pos : POSITION;
 	float2 uv  : TEXCOORD0;
@@ -18,10 +27,90 @@ VertOut VSDefault(VertIn v)
 	return o;
 }
 
+// Helper to convert deg to rad
+float rad(float d) { return d * 0.017453292519943295; }
+
+// Rotation matrices for pan/tilt/yaw in radians (Z-X-Y order)
+float3x3 rotZYX(float pan, float tilt, float yaw)
+{
+	float cp = cos(pan), sp = sin(pan);
+	float ct = cos(tilt), st = sin(tilt);
+	float cy = cos(yaw), sy = sin(yaw);
+	// Z (pan)
+	float3x3 Rz = float3x3(
+		cp, -sp, 0.0,
+		sp,  cp, 0.0,
+		0.0, 0.0, 1.0
+	);
+	// X (tilt)
+	float3x3 Rx = float3x3(
+		1.0, 0.0, 0.0,
+		0.0, ct, -st,
+		0.0, st,  ct
+	);
+	// Y (yaw)
+	float3x3 Ry = float3x3(
+		cy, 0.0, sy,
+		0.0, 1.0, 0.0,
+		-sy, 0.0, cy
+	);
+	return mul(Ry, mul(Rx, Rz));
+}
+
+float2 dirToEquirectUV(float3 dir)
+{
+	// dir is normalized
+	float lon = atan2(dir.z, dir.x); // [-pi, pi]
+	float lat = asin(clamp(dir.y, -1.0, 1.0)); // [-pi/2, pi/2]
+	float u = (lon + 3.141592653589793) / (2.0 * 3.141592653589793);
+	float v = (1.5707963267948966 - lat) / 3.141592653589793;
+	return float2(u, v);
+}
+
+float3 fisheyeScreenToDir(float2 uv, float fov_radians)
+{
+	// Map from [0,1] uv to NDC centered coordinates maintaining aspect ratio
+	float2 xy = (uv * 2.0 - 1.0);
+	xy.x *= aspect;
+	float r = length(xy);
+	if (r > 1.0) {
+		// outside circle, mark invalid by pointing below horizon; will be handled in PS
+		return float3(0.0, -2.0, 0.0);
+	}
+	// Equidistant fisheye projection: r = f * theta => theta = r * fov/2 when r=1
+	float theta = r * (fov_radians * 0.5);
+	float phi = atan2(xy.y, xy.x);
+	float sinT = sin(theta);
+	float3 dir = float3(cos(phi) * sinT, -cos(theta), sin(phi) * sinT);
+	return normalize(dir);
+}
+
 float4 PSMain(VertOut i) : TARGET
 {
-	// Simple test - return a solid color to verify the plugin works
-	return float4(1.0, 0.0, 0.0, 1.0); // Red
+	// Compute circle mask in screen space
+	float2 xy = (i.uv * 2.0 - 1.0);
+	xy.x *= aspect;
+	float r = length(xy);
+	bool inside = (r <= 1.0);
+
+	if (!inside) {
+		return float4(0.0, 0.0, 0.0, outside_alpha);
+	}
+
+	float fovr = rad(fov_deg);
+	float panr = rad(pan_deg);
+	float tiltr = rad(tilt_deg);
+	float yawr = rad(yaw_deg);
+	float3x3 R = rotZYX(panr, tiltr, yawr);
+
+	float3 dir = fisheyeScreenToDir(i.uv, fovr);
+	dir = mul(R, dir);
+	float2 uv = dirToEquirectUV(dir);
+	
+	// Sample the input texture
+	float4 c = image.Sample(textureSampler, uv);
+	c.a = 1.0;
+	return c;
 }
 
 technique Draw {
