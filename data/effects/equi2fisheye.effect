@@ -1,4 +1,10 @@
 uniform float4x4 ViewProj;
+uniform texture2d image;
+uniform sampler_state textureSampler {
+	Filter = Linear;
+	AddressU = Clamp;
+	AddressV = Clamp;
+};
 
 // Parameters in degrees
 uniform float fov_deg = 180.0;
