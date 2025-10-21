@@ -113,6 +113,16 @@ static void equi2fish_video_render(void *data, gs_effect_t *effect)
 
 	const float aspect = (float)width / (float)height;
 
+	// Get the input texture from the parent source
+	gs_texture_t *tex = obs_source_get_texture(parent);
+	if (!tex) {
+		obs_source_process_filter_end(filter->context, filter->effect, width, height);
+		return;
+	}
+
+	// Set the input texture
+	gs_effect_set_texture(gs_effect_get_param_by_name(filter->effect, "image"), tex);
+
 	// Set effect parameters
 	gs_effect_set_float(filter->param_fov, filter->fov_deg);
 	gs_effect_set_float(filter->param_pan, filter->pan_deg);
