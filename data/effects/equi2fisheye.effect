@@ -1,6 +1,7 @@
 uniform float4x4 ViewProj; // provided by OBS
 uniform texture2d image;
-uniform sampler_state defaultSampler {
+
+sampler_state defaultSampler {
 	Filter = Linear;
 	AddressU = Clamp;
 	AddressV = Clamp;
@@ -113,7 +114,7 @@ float4 PSMain(VertOut i) : TARGET
 	dir = mul(R, dir);
 	float2 uv = dirToEquirectUV(dir);
 	
-	// Sample the input texture (provided by OBS filter system)
+	// Sample the input texture
 	float4 c = image.Sample(defaultSampler, uv);
 	c.a = 1.0;
 	return c;
