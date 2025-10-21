@@ -43,12 +43,15 @@ static void equi2fish_update(void *data, obs_data_t *settings)
 			filter->effect = gs_effect_create_from_file(path, NULL);
 			bfree(path);
 			if (filter->effect) {
+				blog(LOG_INFO, "obs-equi2fisheye: Effect loaded successfully");
 				filter->param_fov = gs_effect_get_param_by_name(filter->effect, "fov_deg");
 				filter->param_pan = gs_effect_get_param_by_name(filter->effect, "pan_deg");
 				filter->param_tilt = gs_effect_get_param_by_name(filter->effect, "tilt_deg");
 				filter->param_yaw = gs_effect_get_param_by_name(filter->effect, "yaw_deg");
 				filter->param_aspect = gs_effect_get_param_by_name(filter->effect, "aspect");
 				filter->param_outside_alpha = gs_effect_get_param_by_name(filter->effect, "outside_alpha");
+			} else {
+				blog(LOG_ERROR, "obs-equi2fisheye: Failed to load effect");
 			}
 		}
 	}
@@ -100,8 +103,12 @@ static void equi2fish_video_render(void *data, gs_effect_t *effect)
 	obs_source_t *target = obs_filter_get_target(filter->context);
 	obs_source_t *parent = obs_filter_get_parent(filter->context);
 	
-	if (!target || !parent || !filter->effect)
+	if (!target || !parent || !filter->effect) {
+		blog(LOG_ERROR, "obs-equi2fisheye: Missing target, parent, or effect");
 		return;
+	}
+	
+	blog(LOG_INFO, "obs-equi2fisheye: video_render called");
 
 	uint32_t width = obs_source_get_base_width(target);
 	uint32_t height = obs_source_get_base_height(target);
