@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG -arch arm64 -Wl,-undefined,dynamic_lookup -bundle -Wl,-headerpad_max_install_names -o obs-equi2fisheye.plugin/Contents/MacOS/obs-equi2fisheye "CMakeFiles/obs-equi2fisheye.dir/src/obs-equi2fisheye.c.o" -F/Applications/OBS.app/Contents/Frameworks  -Wl,-rpath,/Applications/OBS.app/Contents/Frameworks -framework libobs

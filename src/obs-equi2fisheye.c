@@ -1,4 +1,6 @@
 #include <obs-module.h>
+#include <obs-frontend-api.h>
+#include <util/platform.h>
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE("obs-equi2fisheye", "en-US")
@@ -8,7 +10,6 @@ OBS_MODULE_USE_DEFAULT_LOCALE("obs-equi2fisheye", "en-US")
 struct equi2fish_filter {
 	obs_source_t *context;
 	gs_effect_t *effect;
-	gs_eparam_t *param_tex;
 	gs_eparam_t *param_fov;
 	gs_eparam_t *param_pan;
 	gs_eparam_t *param_tilt;
@@ -43,7 +44,6 @@ static void equi2fish_update(void *data, obs_data_t *settings)
 			filter->effect = gs_effect_create_from_file(path, NULL);
 			bfree(path);
 			if (filter->effect) {
-				filter->param_tex = gs_effect_get_param_by_name(filter->effect, "image");
 				filter->param_fov = gs_effect_get_param_by_name(filter->effect, "fov_deg");
 				filter->param_pan = gs_effect_get_param_by_name(filter->effect, "pan_deg");
 				filter->param_tilt = gs_effect_get_param_by_name(filter->effect, "tilt_deg");
@@ -100,7 +100,8 @@ static void equi2fish_video_render(void *data, gs_effect_t *effect)
 	struct equi2fish_filter *filter = data;
 	obs_source_t *target = obs_filter_get_target(filter->context);
 	obs_source_t *parent = obs_filter_get_parent(filter->context);
-	if (!target || !parent)
+	
+	if (!target || !parent || !filter->effect)
 		return;
 
 	uint32_t width = obs_source_get_base_width(target);
@@ -108,10 +109,7 @@ static void equi2fish_video_render(void *data, gs_effect_t *effect)
 	if (width == 0 || height == 0)
 		return;
 
-	if (!filter->effect)
-		return;
-
-	if (!obs_source_process_filter_begin(filter->context, GS_RGBA, OBS_NO_DIRECT_RENDERING))
+	if (!obs_source_process_filter_begin(filter->context, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING))
 		return;
 
 	const float aspect = (float)width / (float)height;
@@ -124,7 +122,7 @@ static void equi2fish_video_render(void *data, gs_effect_t *effect)
 	gs_effect_set_float(filter->param_aspect, aspect);
 	gs_effect_set_float(filter->param_outside_alpha, filter->outside_alpha);
 
-	// Render the parent source with our effect
+	// Render with our effect
 	obs_source_process_filter_end(filter->context, filter->effect, width, height);
 }
 

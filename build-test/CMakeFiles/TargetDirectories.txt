@@ -1,0 +1,7 @@
+/Volumes/Crucial X8/GitHub/OBSEqui2Fisheye/build-test/CMakeFiles/obs-equi2fisheye.dir
+/Volumes/Crucial X8/GitHub/OBSEqui2Fisheye/build-test/CMakeFiles/edit_cache.dir
+/Volumes/Crucial X8/GitHub/OBSEqui2Fisheye/build-test/CMakeFiles/rebuild_cache.dir
+/Volumes/Crucial X8/GitHub/OBSEqui2Fisheye/build-test/CMakeFiles/list_install_components.dir
+/Volumes/Crucial X8/GitHub/OBSEqui2Fisheye/build-test/CMakeFiles/install.dir
+/Volumes/Crucial X8/GitHub/OBSEqui2Fisheye/build-test/CMakeFiles/install/local.dir
+/Volumes/Crucial X8/GitHub/OBSEqui2Fisheye/build-test/CMakeFiles/install/strip.dir
